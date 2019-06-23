@@ -1,0 +1,19 @@
+[package]
+name = "maze"
+version = "0.1.0"
+authors = ["Darren Coxall <darren@darrencoxall.com>"]
+edition = "2018"
+publish = false
+description = "A CLI tool to generate mazes using various algorithms"
+documentation = "https://github.com/dcoxall/maze"
+homepage = "https://github.com/dcoxall/maze"
+repository = "git@github.com:dcoxall/maze.git"
+license = "Apache-2.0"
+
+[dependencies]
+rand = "0.6"
+
+[dependencies.clap]
+version = "~2.33"
+default-features = false
+features = [ "color", "vec_map" ]
