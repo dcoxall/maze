@@ -16,7 +16,7 @@ pub struct MazeIter {
     width:              usize,
     height:             usize,
     cells:              Vec<GridCell>,
-    current_cell_index: usize,
+    current_cell_index: Option<usize>,
 }
 
 impl MazeIter {
@@ -24,7 +24,7 @@ impl MazeIter {
         let cells: Vec<GridCell> = (0..(width * height))
             .map(|_| GridCell(false, false))
             .collect();
-        Self { width, height, cells, current_cell_index: 0 }
+        Self { width, height, cells, current_cell_index: None }
     }
 }
 
@@ -56,9 +56,14 @@ impl Iterator for MazeIter {
 
     fn next(&mut self) -> Option<Self::Item> {
         let mut rng = rand::thread_rng();
-        let i = self.current_cell_index;
-        self.current_cell_index += 1;
 
+        if self.current_cell_index.is_none() {
+            self.current_cell_index.replace(0);
+            return Some(Grid::new(self.width, self.height, self.cells.clone(), 0))
+        }
+
+        let i = self.current_cell_index.unwrap_or(0);
+        self.current_cell_index.replace(i + 1);
 
         if let Some(cell) = self.cells.get_mut(i) {
             let has_cell_north = i >= self.width;
@@ -75,7 +80,7 @@ impl Iterator for MazeIter {
                 _ => {},
             }
 
-            Some(Grid::new(self.width, self.height, self.cells.clone()))
+            Some(Grid::new(self.width, self.height, self.cells.clone(), i + 1))
         } else {
             None
         }

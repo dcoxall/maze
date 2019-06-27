@@ -1,4 +1,6 @@
+use std::borrow::Cow;
 use std::fmt;
+use gif;
 
 #[derive(Debug, Clone)]
 pub struct GridCell(
@@ -8,14 +10,15 @@ pub struct GridCell(
 
 #[derive(Debug)]
 pub struct Grid {
-    width:  usize,
-    height: usize,
-    cells:  Vec<GridCell>,
+    pub width:  usize,
+    pub height: usize,
+    pub cells:  Vec<GridCell>,
+    pub current_cell_index: usize,
 }
 
 impl Grid {
-    pub fn new<T: Into<Vec<GridCell>>>(width: usize, height: usize, cells: T) -> Self {
-        Self { width, height, cells: cells.into() }
+    pub fn new<T: Into<Vec<GridCell>>>(width: usize, height: usize, cells: T, current_cell_index: usize) -> Self {
+        Self { width, height, cells: cells.into(), current_cell_index }
     }
 
     pub fn at(&self, x: usize, y: usize) -> Option<&GridCell> {
@@ -68,5 +71,92 @@ impl fmt::Display for Grid {
 
         output = output + &top_row;
         write!(f, "{}", output)
+    }
+}
+
+impl From<Grid> for gif::Frame<'static> {
+    fn from(grid: Grid) -> Self {
+        const BORDER: usize  = 2;
+        const CELL: usize    = 10;
+        const PADDING: usize = 20;
+        const CELL_SIZE: usize = CELL + BORDER;
+
+        let cols = PADDING + BORDER + (CELL_SIZE * grid.width) + PADDING;
+        let rows = PADDING + (CELL_SIZE * grid.height) + BORDER + PADDING;
+
+        let mut pixel_map = vec![1; rows * cols];
+        let mut frame = gif::Frame::default();
+
+        frame.delay = (1000 / (grid.width * grid.height)) as u16;
+        frame.width = cols as u16;
+        frame.height = rows as u16;
+
+        for y in 0..grid.height {
+            let pixel_y =
+                  (PADDING * cols)
+                + (y * CELL_SIZE * cols);
+
+            for i in 0..CELL_SIZE {
+                for bs in 0..BORDER {
+                    pixel_map[pixel_y + PADDING + (cols * i) + bs] = 0;
+                }
+            }
+
+            for x in 0..grid.width {
+                let top_left_index =
+                      pixel_y
+                    + PADDING
+                    + BORDER
+                    + (x * CELL_SIZE);
+
+                if grid.current_cell_index == ((y * grid.width) + x) {
+                    for ix in 0..CELL {
+                        for iy in 0..CELL {
+                            pixel_map[top_left_index + ix + (cols * (iy + BORDER))] = 2;
+                        }
+                    }
+                }
+
+                match grid.at(x, y) {
+                    Some(GridCell(true, false)) => {
+                        for i in 0..CELL_SIZE {
+                            for bs in 0..BORDER {
+                                pixel_map[top_left_index + CELL + (cols * i) + bs] = 0;
+                            }
+                        }
+                    },
+                    Some(GridCell(false, true)) => {
+                        for i in 0..CELL_SIZE {
+                            for bs in 0..BORDER {
+                                pixel_map[top_left_index + i + (cols * bs)] = 0;
+                            }
+                        }
+                    },
+                    _ => {
+                        for i in 0..CELL_SIZE {
+                            for bs in 0..BORDER {
+                                pixel_map[top_left_index + i + (cols * bs)] = 0;
+                                pixel_map[top_left_index + CELL + (cols * i) + bs] = 0;
+                            }
+                        }
+                    },
+                }
+            }
+        }
+
+        for i in 0..((CELL_SIZE * grid.width) + BORDER) {
+            for bs in 0..BORDER {
+                let index = (PADDING * cols)
+                    + (cols * (grid.height * CELL_SIZE))
+                    + PADDING
+                    + (cols * bs)
+                    + i;
+
+                pixel_map[index] = 0;
+            }
+        }
+
+        frame.buffer = Cow::Owned(pixel_map);
+        frame
     }
 }
