@@ -8,7 +8,7 @@ pub struct GridCell(
     pub bool, // east
 );
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Grid {
     pub width:  usize,
     pub height: usize,
