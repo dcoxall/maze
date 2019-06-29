@@ -22,7 +22,7 @@ impl Grid {
     }
 
     pub fn at(&self, x: usize, y: usize) -> Option<&GridCell> {
-        return self.cells.get(y * self.width + x);
+        self.cells.get(y * self.width + x)
     }
 }
 
