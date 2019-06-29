@@ -26,6 +26,12 @@ impl Grid {
     }
 }
 
+impl<T: Iterator<Item=Grid>> From<T> for Grid {
+    fn from(t: T) -> Self {
+        t.last().unwrap()
+    }
+}
+
 impl fmt::Display for Grid {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         const CORNER: &str       = "+";

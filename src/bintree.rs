@@ -15,12 +15,6 @@ impl Maze {
     }
 }
 
-impl From<Maze> for Grid {
-    fn from(maze: Maze) -> Self {
-        maze.last().unwrap()
-    }
-}
-
 impl Iterator for Maze {
     type Item = Grid;
 
