@@ -98,7 +98,6 @@ impl From<Grid> for gif::Frame<'static> {
         let mut pixel_map = vec![1; rows * cols];
         let mut frame = gif::Frame::default();
 
-        frame.delay = (1000 / (grid.width * grid.height)) as u16;
         frame.width = cols as u16;
         frame.height = rows as u16;
 

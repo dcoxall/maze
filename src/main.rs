@@ -3,6 +3,7 @@ extern crate clap;
 mod grid;
 mod bintree;
 mod sidewinder;
+mod aldousbroder;
 
 use std::io;
 use std::fs::File;
@@ -22,7 +23,8 @@ fn main() {
             .long("algo")
             .takes_value(true)
             .possible_value("btree")
-            .possible_value("sidewinder"))
+            .possible_value("sidewinder")
+            .possible_value("aldous-broder"))
         .arg(Arg::with_name("out")
             .long("out")
             .value_name("FILE")
@@ -34,6 +36,7 @@ fn main() {
 
     let maze: Box<Iterator<Item=Grid>> = match m.value_of("algorithm") {
         Some("sidewinder") => Box::new(sidewinder::Maze::new(width, height)),
+        Some("aldous-broder") => Box::new(aldousbroder::Maze::new(width, height)),
         _ => Box::new(bintree::Maze::new(width, height)),
     };
 
@@ -52,7 +55,16 @@ fn generate_gif<I: Iterator<Item=Grid>>(file_name: &str, iter: I) -> io::Result<
     let mut image = File::create(file_name)?;
 
     let grids: Vec<Grid> = iter.collect();
-    let frames: Vec<gif::Frame> = grids.iter().map(Grid::clone).map(Grid::into).collect();
+    let grid_count = grids.len();
+    let frames: Vec<gif::Frame> = grids.iter()
+        .map(|grid| {
+            let grid = grid.clone();
+            let mut frame: gif::Frame = grid.into();
+            // set the delay relative to the number of frames
+            frame.delay = (1000 / grid_count) as u16;
+            frame
+        })
+        .collect();
     let first_frame = frames.first().unwrap();
 
     let mut encoder = gif::Encoder::new(
