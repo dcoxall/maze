@@ -9,4 +9,4 @@
 
     $ maze --algo sidewinder --out examples/btree.gif 20 20
 
-![Binary tree maze algorithm](/examples/sidewinder.gif)
+![Sidewinder maze algorithm](/examples/sidewinder.gif)
