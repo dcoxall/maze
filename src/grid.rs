@@ -10,15 +10,16 @@ pub struct GridCell(
 
 #[derive(Debug, Clone)]
 pub struct Grid {
-    pub width:  usize,
+    pub width: usize,
     pub height: usize,
-    pub cells:  Vec<GridCell>,
+    pub cells: Vec<GridCell>,
+    pub highlights: Vec<usize>,
     pub current_cell_index: usize,
 }
 
 impl Grid {
-    pub fn new<T: Into<Vec<GridCell>>>(width: usize, height: usize, cells: T, current_cell_index: usize) -> Self {
-        Self { width, height, cells: cells.into(), current_cell_index }
+    pub fn new<T: Into<Vec<GridCell>>, H: Into<Vec<usize>>>(width: usize, height: usize, cells: T, current_cell_index: usize, highlights: H) -> Self {
+        Self { width, height, cells: cells.into(), current_cell_index, highlights: highlights.into() }
     }
 
     pub fn at(&self, x: usize, y: usize) -> Option<&GridCell> {
@@ -56,6 +57,10 @@ impl fmt::Display for Grid {
                     },
                     Some(GridCell(false, true)) => {
                         top_row.push_str(NORTH_CLOSED);
+                        middle_row.push_str(EAST_OPEN);
+                    },
+                    Some(GridCell(true, true)) => {
+                        top_row.push_str(NORTH_OPEN);
                         middle_row.push_str(EAST_OPEN);
                     },
                     _ => {
@@ -115,9 +120,18 @@ impl From<Grid> for gif::Frame<'static> {
                     + BORDER
                     + (x * CELL_SIZE);
 
+
+                if grid.highlights.contains(&((y * grid.width) + x)) {
+                    for ix in 0..CELL_SIZE {
+                        for iy in 0..CELL_SIZE {
+                            pixel_map[top_left_index + ix + (cols * (iy + BORDER))] = 3;
+                        }
+                    }
+                }
+
                 if grid.current_cell_index == ((y * grid.width) + x) {
-                    for ix in 0..CELL {
-                        for iy in 0..CELL {
+                    for ix in 0..CELL_SIZE {
+                        for iy in 0..CELL_SIZE {
                             pixel_map[top_left_index + ix + (cols * (iy + BORDER))] = 2;
                         }
                     }
@@ -138,11 +152,19 @@ impl From<Grid> for gif::Frame<'static> {
                             }
                         }
                     },
-                    _ => {
+                    Some(GridCell(false, false)) => {
                         for i in 0..CELL_SIZE {
                             for bs in 0..BORDER {
                                 pixel_map[top_left_index + i + (cols * bs)] = 0;
                                 pixel_map[top_left_index + CELL + (cols * i) + bs] = 0;
+                            }
+                        }
+                    },
+                    _ => {
+                        for bs_x in 0..BORDER {
+                            for bs_y in 0..BORDER {
+                                pixel_map[top_left_index + CELL + (cols * bs_x)] = 0;
+                                pixel_map[top_left_index + CELL + (cols * bs_x) + bs_y] = 0;
                             }
                         }
                     },

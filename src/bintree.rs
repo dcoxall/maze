@@ -23,7 +23,7 @@ impl Iterator for Maze {
 
         if self.index.is_none() {
             self.index.replace(0);
-            return Some(Grid::new(self.width, self.height, &*self.cells, 0))
+            return Some(Grid::new(self.width, self.height, &*self.cells, 0, vec![]))
         }
 
         let i = self.index.unwrap();
@@ -44,7 +44,7 @@ impl Iterator for Maze {
             }
 
             self.index.replace(i + 1);
-            Some(Grid::new(self.width, self.height, &*self.cells, i + 1))
+            Some(Grid::new(self.width, self.height, &*self.cells, i + 1, vec![]))
         } else {
             None
         }
